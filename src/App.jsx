@@ -1,8 +1,15 @@
+
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { useApp } from './context/AppContext'
 import Login from './pages/Login'
 import MisMascotas from './pages/MisMascotas'
 import Admin from './pages/Admin'
+import RequiereSesion from './router/RequiereSesion.jsx' 
+
+
+if (!RequiereSesion) {
+  throw new Error('Import error: "./router/RequiereSesion.jsx" no cargado. Verifica src/router/RequiereSesion.jsx y mayúsculas/minúsculas.')
+}
 
 function Home(){
   const nav = useNavigate()
@@ -20,7 +27,6 @@ function Home(){
 
 export default function App(){
   const { usuarioActual, logout } = useApp()
-
   return (
     <>
       <nav className="navbar navbar-expand-lg bg-light px-3">
@@ -41,9 +47,16 @@ export default function App(){
       <Routes>
         <Route path="/" element={<Home/>} />
         <Route path="/login" element={<Login/>} />
-        <Route path="/mis-mascotas" element={<MisMascotas/>} />
-        <Route path="/admin" element={<Admin/>} />
+        <Route path="/mis-mascotas" element={
+          <RequiereSesion><MisMascotas/></RequiereSesion>
+        } />
+        <Route path="/admin" element={
+          <RequiereSesion>
+            {usuarioActual && usuarioActual.email === 'admin@admin.cl' ? <Admin/> : <div className="container py-5"><h3>Acceso denegado</h3><p>Solo administradores pueden acceder a esta sección.</p></div>}
+          </RequiereSesion>
+        } />
       </Routes>
     </>
   )
 }
+

@@ -1,4 +1,5 @@
-// Persistencia simple
+// Este es el archivo: src/data/tiendaDB.js
+
 let _db = { usuarios: [], mascotas: [] };
 
 function flush(){ localStorage.setItem('petcontrolDB', JSON.stringify(_db)); }
@@ -9,6 +10,8 @@ function ensureSchema(){
 }
 
 export function initDB(){
+  _db = { usuarios: [], mascotas: [] };
+  
   const raw = localStorage.getItem('petcontrolDB');
   if (raw){
     try { _db = JSON.parse(raw) || _db; } catch {}
@@ -19,18 +22,42 @@ export function initDB(){
 }
 
 // ===== USUARIOS =====
-export function crearUsuario({email, nombre}){
+
+// MODIFICADO: Ahora acepta y guarda 'password'
+export function crearUsuario({email, nombre, password}){
   const existe = _db.usuarios.find(u=>u.email===email);
   if (existe) return existe;
-  const u = { id: (crypto?.randomUUID?.() ?? String(Date.now())), email, nombre: nombre||'', creadoEn: new Date().toISOString() };
-  _db.usuarios.push(u); flush(); return u;
+  
+  const u = { 
+    id: (crypto?.randomUUID?.() ?? String(Date.now())), 
+    email, 
+    nombre: nombre||'', 
+    password: password || '1234', // Añadimos la contraseña
+    creadoEn: new Date().toISOString() 
+  };
+  _db.usuarios.push(u); 
+  flush(); 
+  return u;
 }
+
 export function obtenerUsuarioPorEmail(email){
   return _db.usuarios.find(u=>u.email===email) || null;
 }
 
+// NUEVA FUNCIÓN: Necesaria para el login
+export function loginUsuario(email, password) {
+  const usuario = obtenerUsuarioPorEmail(email);
+  
+  // Comprueba si el usuario existe y la contraseña coincide
+  if (usuario && usuario.password === password) {
+    return usuario;
+  }
+  // Si no, devuelve null
+  return null;
+}
+
 // ===== MASCOTAS (por usuario) =====
-export function crearMascota({usuarioId, nombre, edad, vacuna, raza, descripcion}){
+export function crearMascota({usuarioId, nombre, edad, vacuna, raza, tipo, descripcion}){
   const m = {
     id: (crypto?.randomUUID?.() ?? String(Date.now())),
     usuarioId,
@@ -38,6 +65,7 @@ export function crearMascota({usuarioId, nombre, edad, vacuna, raza, descripcion
     edad: Number(edad||0),
     vacuna: (vacuna||'').trim(),
     raza: (raza||'').trim(),
+    tipo: (tipo||'').trim(),
     descripcion: (descripcion||'').trim(),
     creadaEn: new Date().toISOString()
   };
@@ -61,8 +89,14 @@ export function eliminarMascota(id){
 export function listarUsuarios(){ return [..._db.usuarios] }
 export function listarTodasLasMascotas(){ return [..._db.mascotas] }
 export function listarMascotasDeUsuario(usuarioId){ return _db.mascotas.filter(m=>m.usuarioId===usuarioId) }
-export function eliminarUsuarioYMasculino(usuarioId){
+
+export function eliminarUsuarioYMascotas(usuarioId){
   _db.usuarios = _db.usuarios.filter(u=>u.id!==usuarioId)
   _db.mascotas = _db.mascotas.filter(m=>m.usuarioId!==usuarioId)
   flush()
+}
+
+// Crear usuario admin por defecto si no existe
+if (!obtenerUsuarioPorEmail('admin@admin.cl')) {
+  crearUsuario({ email: 'admin@admin.cl', nombre: 'Administrador', password: 'admin.123' });
 }

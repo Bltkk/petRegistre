@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 
 const reNombre = /^[A-Za-zÁÉÍÓÚÑáéíóúñ ]{2,40}$/
+const cap = (s,max)=> (s||'').trim().slice(0,max)
 
 export default function MisMascotas(){
   const { usuarioActual, obtenerMisMascotas, agregarMascota, editarMascota, borrarMascota } = useApp()
   const nav = useNavigate()
   const [lista, setLista] = useState([])
-  const [form, setForm] = useState({ nombre:'', edad:'', vacuna:'', raza:'', descripcion:'' })
+  const [form, setForm] = useState({ nombre:'', edad:'', vacuna:'', raza:'', tipo:'', descripcion:'' })
   const [editId, setEditId] = useState(null)
   const [errores, setErrores] = useState({})
 
@@ -24,13 +25,13 @@ export default function MisMascotas(){
 
   function validar(){
     const e={}
-    const nombre = form.nombre.trim()
+    const nombre = cap(form.nombre,40)
     if(!nombre) e.nombre = 'Nombre obligatorio'
     else if(!reNombre.test(nombre)) e.nombre = 'Solo letras, 2–40'
     if(form.edad !== '' && (+form.edad<0 || +form.edad>40)) e.edad = 'Edad 0–40'
-    if((form.vacuna||'').length>40) e.vacuna = 'Máx 40 caracteres'
-    if((form.raza||'').length>40) e.raza = 'Máx 40 caracteres'
-    if((form.descripcion||'').length>200) e.descripcion = 'Máx 200 caracteres'
+    if(cap(form.vacuna,40)!==form.vacuna) e.vacuna = 'Máx 40 caracteres'
+    if(cap(form.raza,40)!==form.raza) e.raza = 'Máx 40 caracteres'
+    if(cap(form.descripcion,200)!==form.descripcion) e.descripcion = 'Máx 200 caracteres'
     return e
   }
 
@@ -41,11 +42,12 @@ export default function MisMascotas(){
     if(Object.keys(eVal).length>0) return
 
     const payload = {
-      nombre: form.nombre.trim(),
+      nombre: cap(form.nombre,40),
       edad: form.edad === '' ? 0 : Number(form.edad),
-      vacuna: (form.vacuna||'').trim(),
-      raza: (form.raza||'').trim(),
-      descripcion: (form.descripcion||'').trim()
+      vacuna: cap(form.vacuna,40),
+      raza: cap(form.raza,40),
+      tipo: cap(form.tipo,40),
+      descripcion: cap(form.descripcion,200)
     }
 
     if(editId){ editarMascota(editId, payload); setEditId(null) }
@@ -63,6 +65,7 @@ export default function MisMascotas(){
       edad: m.edad==null? '' : String(m.edad),
       vacuna: m.vacuna||'',
       raza: m.raza||'',
+      tipo: m.tipo||'',
       descripcion: m.descripcion||''
     })
     setErrores({})
@@ -105,6 +108,17 @@ export default function MisMascotas(){
                  name="raza" value={form.raza} onChange={onChange} />
           {errores.raza && <div className="invalid-feedback">{errores.raza}</div>}
         </div>
+        <div className="col-sm-6 col-md-2">
+          <label className="form-label">Tipo</label>
+          <select className="form-control" name="tipo" value={form.tipo} onChange={onChange}>
+            <option value="">Seleccionar...</option>
+            <option value="Perro">Perro</option>
+            <option value="Gato">Gato</option>
+            <option value="Pájaro">Pájaro</option>
+            <option value="Conejo">Conejo</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
         <div className="col-12">
           <label className="form-label">Descripción</label>
           <textarea className={`form-control ${errores.descripcion?'is-invalid':''}`}
@@ -123,19 +137,19 @@ export default function MisMascotas(){
       <div className="table-responsive">
         <table className="table table-striped align-middle">
           <thead><tr>
-            <th>Nombre</th><th>Edad</th><th>Vacuna</th><th>Raza</th><th>Descripción</th><th></th>
+            <th>Nombre</th><th>Tipo</th><th>Edad</th><th>Vacuna</th><th>Raza</th><th>Descripción</th><th></th>
           </tr></thead>
           <tbody>
             {lista.map(m=>(
               <tr key={m.id}>
-                <td>{m.nombre}</td><td>{m.edad||'-'}</td><td>{m.vacuna||'-'}</td><td>{m.raza||'-'}</td><td>{m.descripcion||'-'}</td>
+                <td>{m.nombre}</td><td>{m.tipo||'-'}</td><td>{m.edad||'-'}</td><td>{m.vacuna||'-'}</td><td>{m.raza||'-'}</td><td>{m.descripcion||'-'}</td>
                 <td className="text-nowrap">
                   <button className="btn btn-sm btn-outline-primary me-2" onClick={()=>onEditar(m)}>Editar</button>
                   <button className="btn btn-sm btn-outline-danger" onClick={()=>onEliminar(m.id)}>Eliminar</button>
                 </td>
               </tr>
             ))}
-            {lista.length===0 && <tr><td colSpan="6">Sin mascotas aún.</td></tr>}
+            {lista.length===0 && <tr><td colSpan="7">Sin mascotas aún.</td></tr>}
           </tbody>
         </table>
       </div>

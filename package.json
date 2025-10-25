@@ -7,9 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "karma start",
-    "test:once": "karma start --single-run",
-    "test:watch": "karma start --auto-watch --no-single-run"
+    "test": "karma start karma.conf.cjs",
+    "test:one": "karma start karma.conf.cjs --single-run",
+    "test:watch": "karma start karma.conf.cjs --auto-watch --no-single-run",
+    "dev:test": "concurrently \"npm run dev\" \"npm run test:watch\""
   },
   "dependencies": {
     "bootstrap": "^5.3.3",
@@ -18,11 +19,13 @@
     "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.4",
-    "@babel/preset-env": "^7.28.3",
-    "@babel/preset-react": "^7.27.1",
+    "@babel/core": "^7.24.4",
+    "@babel/preset-env": "^7.20.0",
+    "@babel/preset-react": "^7.22.5",
+    "@testing-library/react": "^13.4.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "babel-loader": "^9.2.1",
+    "babel-loader": "^9.1.0",
+    "concurrently": "^8.2.2",
     "jasmine-core": "^5.12.0",
     "karma": "^6.4.4",
     "karma-chrome-launcher": "^3.2.0",
@@ -30,7 +33,7 @@
     "karma-jasmine": "^5.1.0",
     "karma-sourcemap-loader": "^0.4.0",
     "karma-webpack": "^5.0.1",
-    "vite": "^5.4.8",
+    "vite": "^5.4.0",
     "webpack": "^5.102.1",
     "webpack-cli": "^5.1.4"
   }

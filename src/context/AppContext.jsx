@@ -13,15 +13,34 @@ export function AppProvider({ children }){
 
   useEffect(()=>{ initDB() }, [])
 
-  // ===== Sesión simple =====
-  function login(email, nombre=''){
-    const u = obtenerUsuarioPorEmail(email) || crearUsuario({email, nombre})
-    setUsuarioActual(u)
-    return u
-  }
-  function logout(){ setUsuarioActual(null) }
+  // Cargar sesión persistente al montar
+  useEffect(() => {
+    const savedUser = localStorage.getItem('usuarioActual')
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser)
+        setUsuarioActual(user)
+      } catch (e) {
+        localStorage.removeItem('usuarioActual')
+      }
+    }
+  }, [])
 
-  // ===== Carrito (ya existente) =====
+  function login(user){
+    setUsuarioActual(user)
+    localStorage.setItem('usuarioActual', JSON.stringify(user))
+    return user
+  }
+  function logout(){
+    setUsuarioActual(null)
+    localStorage.removeItem('usuarioActual')
+  }
+
+  function isAdmin(){
+    return usuarioActual && usuarioActual.email === 'admin@admin.cl'
+  }
+
+  
   const agregarAlCarrito = (prod, qty=1)=> setCarrito(c=>{
     const i=c.findIndex(x=>x.id===prod.id)
     if(i>=0){ const n=[...c]; n[i]={...n[i], cantidad:n[i].cantidad+qty}; return n }
@@ -30,7 +49,7 @@ export function AppProvider({ children }){
   const quitarDelCarrito = id => setCarrito(c=>c.filter(x=>x.id!==id))
   const vaciarCarrito = () => setCarrito([])
 
-  // ===== Mascotas por usuario =====
+
   function obtenerMisMascotas(){
     if (!usuarioActual) return []
     return listarMascotasPorUsuario(usuarioActual.id)
@@ -50,7 +69,7 @@ export function AppProvider({ children }){
 
   return (
     <Ctx.Provider value={{
-      usuarioActual, login, logout,
+      usuarioActual, login, logout, isAdmin,
       carrito, agregarAlCarrito, quitarDelCarrito, vaciarCarrito,
       obtenerMisMascotas, agregarMascota, editarMascota, borrarMascota
     }}>
